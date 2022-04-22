@@ -37,6 +37,21 @@ enum xdp_action {
 * XDP_TX: 패킷을 수신된 인터페이스로 재전송
 * XDP_REDIRECT: 패킷을 다른 인터페이스로 전달
 
+```c
+// include/uapi/linux/bpf.h
+struct xdp_md {
+	__u32 data;
+	__u32 data_end;
+	__u32 data_meta;
+	/* Below access go through struct xdp_rxq_info */
+	__u32 ingress_ifindex; /* rxq->dev->ifindex */
+	__u32 rx_queue_index;  /* rxq->queue_index  */
+
+	__u32 egress_ifindex;  /* txq->dev->ifindex */
+};
+```
+`xdp_md` 구조체에는 패킷의 시작인 `data`와 끝인 `data_end`에 해당하는 주소가 담겨져 있습니다.
+
 
 ### XDP example
 **xdp.c**
