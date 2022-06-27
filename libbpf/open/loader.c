@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <bpf/libbpf.h>
 #define DEBUGFS "/sys/kernel/debug/tracing/"
 
 void	read_trace_pipe() {
-	int trace_fd = open(DEBUGFS"trace_pip", O_RDONLY, 0);
+	int trace_fd = open(DEBUGFS"trace_pipe", O_RDONLY, 0);
 	if (trace_fd < 0)
 		return;
 
@@ -45,5 +46,14 @@ int	main(void) {
 		printf("program find success\n");
 	}
 	printf("program name : %s\n", bpf_program__name(prog));
+	//
+	link = bpf_program__attach(prog);
+	//
+	if (link == NULL) {
+		printf("attach failed\n");
+		exit(1);
+	}
+	read_trace_pipe();
+	bpf_object__close(obj);
 	return 0;
 }
