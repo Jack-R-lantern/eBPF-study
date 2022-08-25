@@ -1,6 +1,6 @@
 # eBPF maps - Deep Dive
 
-## kernel config에 따른 지원 가능 map
+## include를 통한 각 type별 bpf_map_ops 객체 생성
 [/include/linux/bpf.h](https://elixir.bootlin.com/linux/v5.19/source/include/linux/bpf.h#L1458) 기준
 ```c
 #define	BPF_MAP_TYPE(_id, _ops)	extern const struct bpf_map_ops _ops;
@@ -179,45 +179,3 @@ BPF_MAP_TYPE(BPF_MAP_TYPE_BLOOM_FILTER, bloom_filter_map_ops)
 >`/kernel/bpf/arraymap.c`에서 정의되며 `bpf_maps_ops` 함수포인터에 실질 동작 함수를 주입함.\
 
 각 map이 어떻게 동작하는지는 구현체를 통해 직접 확인 가능.
-
-### 기본 생성 타입
-* BPF_MAP_TYPE_ARRAY
-* BPF_MAP_TYPE_PERCPU_ARRAY
-* BPF_MAP_TYPE_PROG_ARRAY
-* BPF_MAP_TYPE_PERF_EVENT_ARRAY
-* BPF_MAP_TYPE_HASH
-* BPF_MAP_TYPE_PERCPU_HASH
-* BPF_MAP_TYPE_LRU_HASH
-* BPF_MAP_TYPE_LRU_PERCPU_HASH
-* BPF_MAP_TYPE_LPM_TRIM
-* BPF_MAP_TYPE_ARRAY_OF_MAPS
-* BPF_MAP_TYPE_HASH_OF_MAPS
-* BPF_MAP_TYPE_TASK_STORAGE
-* BPF_MAP_TYPE_QUEUE
-* BPF_MAP_TYPE_STACK
-* BPF_MAP_TYPE_RINGBUF
-* BPF_MAP_TYPE_BLOOM_FILTER
-
-### kernel config에 따른 생성 타입
-#### **CONFIG_CGROUPS**
-* BPF_MAP_TYPE_CGROUP_ARRAY
-#### **CONFIG_CGROUP_BPF**
-* BPF_MAP_TYPE_CGROUP_STORAGE
-* BPF_MAP_TYPE_PERCPU_CGROUP_STORAGE
-#### **CONFIG_PERF_EVENTS**
-* BPF_MAP_TYPE_STACK_TRACE
-#### **CONFIG_BPF_LSM**
-* BPF_MAP_TYPE_INODE_STORAGE
-#### **CONFIG_NET**
-* BPF_MAP_TYPE_DEVMAP
-* BPF_MAP_TYPE_DEVMAP_HASH
-* BPF_MAP_TYPE_SK_STORAGE
-* BPF_MAP_TYPE_CPUMAP
-#### **CONFIG_NET && CONFIG_XDP_SOcKETS**
-* BPF_MAP_TYPE_XSKMAP
-#### **CONFIG_INET**
-* BPF_MAP_TYPE_SOCKMAP
-* BPF_MAP_TYPE_SOCKHASH
-* BPF_MAP_TYPE_REUSEPORT_SOCKARRAY
-#### **CONFIG_BPF_JIT**
-* BPF_MAP_TYPE_STRUCT_OPS
