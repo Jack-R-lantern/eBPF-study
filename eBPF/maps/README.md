@@ -8,6 +8,9 @@
 * key size in bytes
 * value size in bytes
 
+## [map types](./MapType.md)
+> 구체적 type은 별도로 정리
+
 ## commands
 ### create
 ```c
