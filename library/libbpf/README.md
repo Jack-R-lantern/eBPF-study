@@ -188,4 +188,25 @@
 >	__u64 map_extra;
 >}
 >```
- ## Auxiliary functions
+
+## Auxiliary functions
+> 위의 설명 범주에 적합하지 않은 함수와 타입.\
+> 반드시 `libbpf_` 접두어가 있어야 함. (ex: libbpf_prog_type_by_name)
+
+## ABI
+> libbpf는 DSO(동적 공유 객체) 또는 정적으로 링크 할 수 있음.\
+> 다른 어플리케이션의 라이브러리와의 충돌을 피하기 위해, 모든 비정적 libbpf 심볼은 API documentation에 언급된 접두어 중 하나를 포함해야함.
+>### Symbol visibility
+>```c
+>#ifndef LIBBPF_API
+>#define LIBBPF_API	__attribute__((visibility("default")))
+>#endif
+>```
+> `libbpf`는 기본적으로 모든 전역 심볼들의 가시성이 `hidden` 속성을 가질때 모델을 따름.\
+> 심볼을 표현하려면 명시적으로 `LIBBPF_API` 매크로에 속성을 부여해야함.
+>
+>### ABI versionning
+> 향후의 ABI 확장을 가능하게 하기 위해 `libbpf ABI`는 버전을 가짐.\
+> 버저닝은 `libbpf.map`에 의해 구현됨.\
+> 버전 스크립트는 링커로 전달됨.\
+> 버전 이름은 `LIBBPF_prefix` + 0.0.1 부터 시작하는 3구성 숫자형태를 가짐.
