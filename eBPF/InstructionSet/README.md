@@ -88,3 +88,78 @@ src_reg = (u32) src_reg ^ (u32) imm32
 ```shell
 src_reg = src_reg ^ imm32
 ```
+
+### Byte swap instructions
+byte 스왑 명령어는 `BPF_ALU` 명령어 클래스와, operation code의 4비트인 `BPF_END`를 사용합니다.\
+byte 스왑 명령어는 오직 목적지 레스터에 대해서만 수행합니다. \
+분리된 원천 레지스터, 또는 상수값에는 사용하지 말아야합니다. \
+`opcode`의 `source`필드의 1비트를 바이트 정렬 규칙을 선택하는데 사용합니다.
+| source    | value | description                                       |
+|-----------|-------|---------------------------------------------------|
+| BPF_TO_LE | 0x00  | convert between host byte order and little endian |
+| BPF-TO_BE | 0x08  | convert between host byte order and big endian    |
+
+`imm` 필드는 스왑 명령어의 폭으로 변환합니다. \
+폭은 16, 32, 64를 지원합니다.
+
+### Jump instructions
+`instruction class`가 `BPF_JMP32`라면 32bit 피연산자를 사용합니다.\
+`instruction class`가 `BPF_JMP`라면 64bit 피연산자를 사용합니다.\
+`operation code` 부분은 아래의 명령에 따라 인코딩 됩니다.
+| code     | value | description               | notes        |
+|----------|-------|---------------------------|--------------|
+| BPF_JA   | 0x00  | PC += off                 | BPF_JMP only |
+| BPF_JEQ  | 0x10  | PC += off if dst == src   |              |
+| BPF_JGT  | 0x20  | PC += off if dst > src    | unsigned     |
+| BPF_JGE  | 0x30  | PC += off if dst >= src   | unsigned     |
+| BPF_JSET | 0x40  | PC += off if dst & src    |              |
+| BPF_JNE  | 0x50  | PC += off if dst != src   |              |
+| BPF_JSGT | 0x60  | PC += off if dst > src    | signed       |
+| BPF_JSGE | 0x70  | PC += off if dst >= src   | signed       |
+| BPF_CALL | 0x80  | function call             |              |
+| BPF_EXIT | 0x90  | function / program return | BPF_JMP only |
+| BPF_JLT  | 0xa0  | PC += off if dst < src    | unsigned     |
+| BPF_JLE  | 0xb0  | PC += off if dst <= src   | unsigned     |
+| BPF_JSLT | 0xc0  | PC += off if dst < src    | signed       |
+| BPF_JSLE | 0xd0  | PC += off if dst <= src   | signed       |
+eBPF 프로그램은 BPF_EXIT를 수행하기 전에 반환 값을 레지스터 R0에 저장해야 합니다.
+
+## Load and store instructions
+`load`, `store` 명령어인 `BPF_LD`, `BPF_LDX`, `BPF_ST`, `BPF_STX`는 8 bit `opcode`를 아래와 같이 나눕니다.
+| 3 bits (MSB) | 2 bits | 3 bits (LSB)      |
+|--------------|--------|-------------------|
+| mode         | size   | instruction class |
+
+모드는 다음 중 하나로 정의됩니다.
+| mode modifier | value | description |
+|---------------|-------|-------------|
+| BPF_IMM       | 0x00  | 64-bit immediate | 
+| BPF_ABS       | 0x20  | legacy BPF packet access (absolute) |
+| BPF_IND       | 0x40  | legacy BPF packet access (indirect) |
+| BPF_MEM       | 0x60  | regular load and store operations   |
+| BPF_ATOMIC    | 0xc0  | atomic operations |
+
+사이즈는 다음중 하나로 정의됩니다.
+| size modifier | value | description |
+|---------------|-------|-------------|
+| BPF_W         | 0x00  | word (4 bytes) |
+| BPF_H         | 0x08  | half word (2 bytes) |
+| BPF_B         | 0x10  | byte        |
+| BPF_DW        | 0x18  | double word (8 bytes) |
+
+## Regular load and store operations
+`BPF_MEM` 모드는 레지스터와 메모리간의 데이터 이동을 위한 일반적인 `load`, `store`명령어로 인코딩 하기 위해 사용합니다.
+### example
+* **`BPF_MEM | <size> | BPF_STX` 의미**
+```shell
+*(size *) (dst_reg + off) = src_reg
+```
+* **`BPF_MEM | <size> | BPF_ST` 의미**
+```shell
+*(size *) (dst_reg + off) = imm32
+```
+* **`BPF_MEM | <size> | BPF_LDX` 의미**
+```shell
+dst_reg = *(size *) (src_reg + off)
+```
+### Atomic operations
