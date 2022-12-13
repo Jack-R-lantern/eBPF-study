@@ -51,3 +51,89 @@
 >>	...
 >>}
 >>```
+
+## Macro
+> `include/linux/tracepoint.h`에서 `TRACE_EVENT`에 대한 정의를 확인 할 수 있음.\
+> `TRACE_EVENT` -> `DECLARE_TRACE` -> `__DECLARE_TRACE`
+> 
+> ### TRACE_EVENT
+>> ```c
+>>#define TRACE_EVENT(name, proto, args, struct, assign, print) \
+>>		DECLARE_TRACE(name, PARAMS(proto), PARAMS(args), PARAMS(cond))
+>> ```
+> ### DECLARE_TRACE
+>>```c
+>>#define DECLARE_TRACE(name, proto, args) \
+>>		__DECLARE_TRACE(name, PARAMS(proto), PARAMS(args), \
+>>						cpu_online(raw_smp_processor_id()), \
+>>						PARAMS(void *__data, proto))
+>>```
+> ### __DECLARE_TRACE
+> **TRACEPOINTS_ENABLED**
+>> ```c
+>>#define __DECLARE_TRACE(name proto, args, cond, data_proto) \
+>>		extern int __traceiter_##name(data_proto); \
+>>		DECLARE_STATIC_CALL(tp_func_##name, __traceiter_##name); \
+>>		extern struct tracepoint __tracepoint_##name; \
+>>		static inline void trace_##name(proto) \
+>>		{
+>>			if (static_key_false(&__tracepoint_##name.key)) \
+>>					__DO_TRACE(name, TP_ARGS(args), TP_CONDITION(cond), 0);
+>>			if (IS_ENABLED(CONFIG_LOCKDEP) && (cond)) {
+>>					rcu_read_lock_sched_notrace(); \
+>>					rcu_dereference_sched(__tracepoint_##name.funcs); \	
+>>					rcu_read_unlock_sched_notrace(); \
+>>			} \
+>>		}\
+>>		__DECLARE_TRACE_RCU(name, PARAMS(proto), PARAMS(args), PARAMS(cond)) \
+>>		static inline int \
+>>		register_trace_##name(void (*probe)(data_proto), void *data) \
+>>		{ \
+>>			return tracepoint_probe_register(&__tracepoint_##name, (void *)probe, data); \
+>>		}\
+>>		static inline int \
+>>		register_trace_prio_##name(void (*probe)(data_proto), void *data, int prio) \
+>>		{\
+>>			return tracepoint_probe_register_prio(&__tracepoint_##name, (void *)probe, data, prio); \
+>>		}\
+>>		static inline int \
+>>		unregister_trace_##name(void (*probe)(data_proto), void *data) \
+>>		{\
+>>			return tracepoint_probe_unregister(&__tracepoint_##name, (void *)probe, data); \
+>>		}\
+>>		static inline void\
+>>		check_trace_callback_type_##name(void (*cb)(data_proto))\
+>>		{\
+>>		}\
+>>		static inline bool \
+>>		trace_##name##_enabled(void) \
+>>		{\
+>>			return static_key_false(&__tracepoint_##name.key)\
+>>		}
+>> ```
+> **!TRACEPOINTS_ENABLED**
+>> ```c
+>>#define __DECLARE_TRACE(name, proto, args, cond, data_proto) \
+>>		static inline void trace_##name(proto) \
+>>		{ } \
+>>		static inline void trace_##name##_rcuidle(proto) \
+>>		{ } \
+>>		static inline int \
+>>		register_trace_##name(void (*probe)(data_proto), void *data)\
+>>		{\
+>>			return -ENOSYS;
+>>		}\
+>>		static inline int \
+>>		unregister_trace_##name(void (*probe)(data_proto), void *data)\
+>>		{\
+>>			return -ENOSYS;
+>>		}\
+>>		static inline void check_trace_callback_type_##name(void (*cb)(data_proto)) \
+>>		{\
+>>		}\
+>>		static inline bool \
+>>		trace_##name_enabled(void)
+>>		{\
+>>			return false;\
+>>		}\
+>> ```
