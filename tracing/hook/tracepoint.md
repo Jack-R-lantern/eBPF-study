@@ -137,3 +137,18 @@
 >>			return false;\
 >>		}\
 >> ```
+
+## struct
+> ### tracepoint
+>>```c
+>>struct tracepoint {
+>>	const char *name;	/* Tracepoint name */
+>>	struct static_key key;
+>>	struct static_call_key *static_call_key;
+>>	void *static_call_tramp;
+>>	void *iterator;
+>>	int (*regfunc)(void);
+>>	void (*unregfunc)(void);
+>>	struct tracepoint_func __rcu *funcs;
+>>}
+>>```
