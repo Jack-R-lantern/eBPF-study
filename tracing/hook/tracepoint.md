@@ -51,6 +51,17 @@
 >>	...
 >>}
 >>```
+>
+> ### where
+>> * subsys_eventname은 커널 이벤트 중 유일한 구분자.
+>>	* subsys는 서브시스템의 이름입니다.
+>>	* eventname은 추적하기 위한 이벤트의 이름.
+>> * `TP_PROTO(int firstarg, struct task_struct *p)`는 tracepoint에 의해 호출되어지는 함수의 프로토타입.
+>> * `TP_ARGS(firstarg, p)`는 프로토타입에서 발견된 것과 동일한 매개변수 이름.
+>> * 여러 소스파일에서 헤더를 사용하더라도, `#define CREATE_TRACE_POINTS`는 오직 하나의 소스파일에서만 등장해야 함.
+>
+> 함수(프로브)를 tracepoint에 연결하는 것은 `register_subsys_eventname()`을 통해 특정 트레이스포인트에 대한 프로브(호출할 함수)를 제공함으로써 이루어짐.\
+> 프로브 제거는 `unregister_trace_subsys_eventname()`을 통해 수행. 
 
 ## Macro
 > `include/linux/tracepoint.h`에서 `TRACE_EVENT`에 대한 정의를 확인 할 수 있음.\
